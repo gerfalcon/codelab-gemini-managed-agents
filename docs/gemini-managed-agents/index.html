@@ -1,0 +1,428 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Building Custom Managed Agents with the Gemini API</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14" ga4id=""></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  codelab-ga4id=""
+                  id="gemini-managed-agents"
+                  title="Building Custom Managed Agents with the Gemini API"
+                  environment="web"
+                  feedback-link="https://github.com/gerfalcon/gemini-managed-agents/issues">
+    
+      <google-codelab-step label="Overview and Prerequisites" duration="1">
+        <p>Managed agents on the Gemini API let you extend the Antigravity agent with your own instructions, skills, and data. You can customize the agent inline at interaction time, or save the configuration as a managed agent you invoke by ID.</p>
+<p>In this codelab, you will build and manage custom agents using persistent remote environments. You will learn to load files declaratively, persist installed packages, lock down outbound network calls, inject authentication headers securely, and manage the lifecycle of registered agents.</p>
+<h2 class="checklist" is-upgraded>What you&#39;ll learn</h2>
+<ul class="checklist">
+<li>How to customize the Antigravity agent inline with custom instructions</li>
+<li>How to declare environment sources (Git, Cloud Storage, and inline files)</li>
+<li>How to reuse and verify persistent remote execution sandboxes</li>
+<li>How to lock down sandbox network outbound requests using allowlists</li>
+<li>How to inject authorization credentials using egress header transforms</li>
+<li>How to register, list, fetch, and delete custom Managed Agents</li>
+</ul>
+<h2 is-upgraded>What you&#39;ll need</h2>
+<ul>
+<li>A machine with Python 3.10+ installed</li>
+<li>A Gemini API key (set as the <code>GEMINI_API_KEY</code> environment variable)</li>
+<li>Installation of the new Gemini Python SDK (<code>google-genai</code>)</li>
+<li>Roughly 60 minutes</li>
+</ul>
+<p>Let&#39;s get started by setting up the Python environment.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Inline Customization" duration="1">
+        <p>The fastest way to build a custom agent is to pass your configuration inline while creating a new interaction with the Gemini API. You don&#39;t need any registration step first.</p>
+<p>You can customize the agent inline by overriding:</p>
+<ol type="1">
+<li><strong>System instructions</strong> using <code>system_instruction</code> to shape behavior</li>
+<li><strong>Tools</strong> to override the default toolsets or specify custom tools</li>
+<li><strong>Environment sources</strong> to mount files directly into the execution workspace</li>
+</ol>
+<h2 is-upgraded>Step 1: Create a script for inline configuration</h2>
+<p>Let&#39;s write a simple Python script to pass inline instructions and print the agent output.</p>
+<p>Create a file named <code>01_inline_customization.py</code> and add the following code:</p>
+<pre><code language="language-python" class="language-python">from google import genai
+
+# Initialize the Gemini client. It automatically picks up GEMINI_API_KEY from your environment.
+client = genai.Client()
+
+print(&#34;Sending interaction with inline customization...&#34;)
+
+# Create an interaction using the base Antigravity agent
+interaction = client.interactions.create(
+    agent=&#34;antigravity-preview-05-2026&#34;,
+    input=&#34;What is your persona, and what format should you export reports in?&#34;,
+    system_instruction=&#34;You are a data analyst. Always include visualizations and export results as PDF.&#34;,
+)
+
+print(&#34;\n--- Agent Response ---&#34;)
+print(interaction.output_text)
+</code></pre>
+<h2 is-upgraded>Step 2: Run the script</h2>
+<p>Make sure your API key is exported, then execute the script:</p>
+<pre><code language="language-bash" class="language-bash">export GEMINI_API_KEY=&#34;your_api_key_here&#34;
+python 01_inline_customization.py
+</code></pre>
+<p>You should see an output confirming the agent&#39;s persona:</p>
+<pre>Sending interaction with inline customization...
+
+--- Agent Response ---
+I am a data analyst. Whenever I generate reports, I will ensure they contain clear visualizations and are exported in PDF format.
+</pre>
+<p>Positive : Inline configurations are ideal for fast prototyping and one-off tasks where you don&#39;t need to persist or reuse the agent settings.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Declarative Environment Sources" duration="1">
+        <p>While you can pass configuration inline, we recommend organizing your agent&#39;s files in a structured workspace directory. You can mount three types of declarative sources into your environment:</p>
+<ul>
+<li><strong>Git Repository (</strong><strong><code>repository</code></strong><strong>)</strong>: Clones a Git repo into the sandbox</li>
+<li><strong>Cloud Storage (</strong><strong><code>gcs</code></strong><strong>)</strong>: Copies files/directories from Google Cloud Storage</li>
+<li><strong>Inline content (</strong><strong><code>inline</code></strong><strong>)</strong>: Writes text content to a target file in the sandbox</li>
+</ul>
+<p>Let&#39;s set up a custom environment mounting a repository, GCS bucket data, and an inline file.</p>
+<h2 is-upgraded>Write the script</h2>
+<p>Create <code>02_environment_sources.py</code>:</p>
+<pre><code language="language-python" class="language-python">from google import genai
+
+client = genai.Client()
+
+print(&#34;Creating sandbox with multiple declarative sources...&#34;)
+
+# Create an interaction that mounts:
+# 1. A public Git repository (target: /workspace/spoon-knife)
+# 2. A public GCS bucket with state data (target: /workspace/gcs-data)
+# 3. An inline metadata/notes file (target: /workspace/notes/readme.md)
+interaction = client.interactions.create(
+    agent=&#34;antigravity-preview-05-2026&#34;,
+    input=&#34;List the files in /workspace/spoon-knife, read /workspace/notes/readme.md, and summarize what you find.&#34;,
+    environment={
+        &#34;type&#34;: &#34;remote&#34;,
+        &#34;sources&#34;: [
+            {
+                &#34;type&#34;: &#34;repository&#34;,
+                &#34;source&#34;: &#34;https://github.com/octocat/Spoon-Knife&#34;,
+                &#34;target&#34;: &#34;/workspace/spoon-knife&#34;,
+            },
+            {
+                &#34;type&#34;: &#34;gcs&#34;,
+                &#34;source&#34;: &#34;gs://cloud-samples-data/bigquery/us-states/&#34;,
+                &#34;target&#34;: &#34;/workspace/gcs-data&#34;,
+            },
+            {
+                &#34;type&#34;: &#34;inline&#34;,
+                &#34;target&#34;: &#34;/workspace/notes/readme.md&#34;,
+                &#34;content&#34;: &#34;# Project Notes\n\n- Analyze state population data.\n- Create visualizations.\n&#34;,
+            },
+        ],
+    },
+)
+
+print(&#34;\n--- Agent Response ---&#34;)
+print(interaction.output_text)
+</code></pre>
+<p>Run the script:</p>
+<pre><code language="language-bash" class="language-bash">python 02_environment_sources.py
+</code></pre>
+<p>The agent clones the repository, downloads the GCS data, mounts the inline README, and presents a summary of the files in your workspace.</p>
+<p>Negative : When specifying target paths, you cannot mount files to the environment root <code>/</code>. You must always specify a sub-directory target (e.g., <code>/workspace/...</code> or <code>/backend-app</code>).</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Reusing Persistent Environments" duration="1">
+        <p>Environments are decoupled from the interaction context. When you create an interaction with <code>"environment": "remote"</code>, the Gemini API provisions a Linux sandbox and returns an <code>environment_id</code>.</p>
+<p>You can capture this ID and reuse the environment across subsequent calls. Any changes, file creations, or installed packages will persist.</p>
+<h2 is-upgraded>Write the multi-turn persistent script</h2>
+<p>Create <code>03_persistent_environment.py</code>:</p>
+<pre><code language="language-python" class="language-python">from google import genai
+
+client = genai.Client()
+
+# Step 1: Create a fresh sandbox environment, install dependencies
+print(&#34;Interaction 1: Creating fresh sandbox and installing matplotlib...&#34;)
+interaction_1 = client.interactions.create(
+    agent=&#34;antigravity-preview-05-2026&#34;,
+    input=&#34;Install pandas and matplotlib. Verify they work and print the installed versions.&#34;,
+    environment=&#34;remote&#34;,
+)
+print(interaction_1.output_text)
+
+env_id = interaction_1.environment_id
+print(f&#34;\nCaptured Environment ID: {env_id}\n&#34;)
+
+# Step 2: Reuse the same environment, verify package persistence
+print(&#34;Interaction 2: Reusing the same environment...&#34;)
+interaction_2 = client.interactions.create(
+    agent=&#34;antigravity-preview-05-2026&#34;,
+    input=&#34;Create a simple line plot using matplotlib, save it to /workspace/plot.png, and list the files in /workspace.&#34;,
+    environment=env_id,
+    previous_interaction_id=interaction_1.id,
+)
+
+print(&#34;\n--- Agent Response (Interaction 2) ---&#34;)
+print(interaction_2.output_text)
+</code></pre>
+<p>Run the script:</p>
+<pre><code language="language-bash" class="language-bash">python 03_persistent_environment.py
+</code></pre>
+<h2 is-upgraded>Expected Output</h2>
+<p>During the second interaction, you should see that matplotlib is already available without reinstalling:</p>
+<pre>Interaction 1: Creating fresh sandbox and installing matplotlib...
+Installing pandas and matplotlib...
+pandas version: 2.2.x, matplotlib version: 3.8.x verified successfully.
+
+Captured Environment ID: env_abc123xyz...
+
+Interaction 2: Reusing the same environment...
+
+--- Agent Response (Interaction 2) ---
+Plot created and saved to /workspace/plot.png.
+Workspace files:
+- /workspace/plot.png
+</pre>
+<p>Positive : Persisting environments avoids rebuilding work environments and enables developers to run interactive multi-turn workflows where intermediate state matters.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Security &amp; Network Allowlists" duration="1">
+        <p>By default, sandboxes have unrestricted outbound internet access. For production workloads, you should restrict outbound network traffic to trusted APIs and endpoints.</p>
+<p>You can configure a network <code>allowlist</code> containing matching rules:</p>
+<ul>
+<li>Exact hostnames (e.g., <code>api.github.com</code>)</li>
+<li>Wildcards for subdomains (e.g., <code>*.github.com</code>)</li>
+<li>A catch-all wildcard (<code>*</code>) to permit other unlisted traffic</li>
+</ul>
+<h2 is-upgraded>Write the security allowlist script</h2>
+<p>Create <code>04_network_security.py</code>:</p>
+<pre><code language="language-python" class="language-python">from google import genai
+
+client = genai.Client()
+
+print(&#34;Launching interaction with restricted outbound network rules...&#34;)
+
+# In this example, we restrict the agent to only contact api.github.com and PyPI,
+# and block all other domains.
+interaction = client.interactions.create(
+    agent=&#34;antigravity-preview-05-2026&#34;,
+    input=&#34;Try to fetch python packages from pypi.org, and also try to fetch google.com. Report which ones succeed.&#34;,
+    environment={
+        &#34;type&#34;: &#34;remote&#34;,
+        &#34;network&#34;: {
+            &#34;allowlist&#34;: [
+                {&#34;domain&#34;: &#34;pypi.org&#34;},
+                {&#34;domain&#34;: &#34;files.pythonhosted.org&#34;},
+            ]
+        },
+    },
+)
+
+print(&#34;\n--- Agent Response ---&#34;)
+print(interaction.output_text)
+</code></pre>
+<p>Run the script:</p>
+<pre><code language="language-bash" class="language-bash">python 04_network_security.py
+</code></pre>
+<p>You should see the agent report that connection to <code>pypi.org</code> succeeds, while the outbound attempt to <code>google.com</code> is blocked and fails.</p>
+<p>Negative : A subdomain wildcard like <code>*.example.com</code> matches subdomains but does <strong>not</strong> match the root domain <code>example.com</code>. If you need to access both, you must specify them as separate entries in your allowlist.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Secure Credential Injection" duration="1">
+        <p>When custom agents need to access private resources (such as private Git repositories or access-controlled databases), they require credentials.</p>
+<p>However, writing keys to files or setting environment variables inside the sandbox exposes them to potential leakage. Gemini API resolves this by using <strong>egress header transforms</strong> in the egress proxy. The proxy injects credentials on-the-fly, so the raw keys are never visible inside the sandbox itself.</p>
+<h2 is-upgraded>Base64 Encoding Credentials</h2>
+<p>For private Git repositories, we use Basic Authentication with a GitHub Personal Access Token (PAT). Encode the token on your terminal using the username <code>x-oauth-basic</code>:</p>
+<pre><code language="language-bash" class="language-bash">echo -n &#34;x-oauth-basic:ghp_YourGitHubTokenHere&#34; | base64
+</code></pre>
+<p>This returns a base64 string, which we will use as <code>YOUR_BASE64_TOKEN</code>.</p>
+<h2 is-upgraded>Write the credential injection script</h2>
+<p>Create <code>05_credential_injection.py</code>:</p>
+<pre><code language="language-python" class="language-python">from google import genai
+
+client = genai.Client()
+
+print(&#34;Launching agent with secure proxy credential injection...&#34;)
+
+# The Authorization header is injected by the secure egress proxy
+# for all requests directed to github.com
+interaction = client.interactions.create(
+    agent=&#34;antigravity-preview-05-2026&#34;,
+    input=&#34;Clone the private repository https://github.com/your-org/private-repo and list its root files.&#34;,
+    environment={
+        &#34;type&#34;: &#34;remote&#34;,
+        &#34;sources&#34;: [
+            {
+                &#34;type&#34;: &#34;repository&#34;,
+                &#34;source&#34;: &#34;https://github.com/your-org/private-repo&#34;,
+                &#34;target&#34;: &#34;/workspace/private-repo&#34;,
+            }
+        ],
+        &#34;network&#34;: {
+            &#34;allowlist&#34;: [
+                {
+                    &#34;domain&#34;: &#34;github.com&#34;,
+                    &#34;transform&#34;: {
+                        &#34;Authorization&#34;: &#34;Basic YOUR_BASE64_TOKEN&#34;
+                    },
+                },
+                {
+                    &#34;domain&#34;: &#34;*&#34; # Permitting other outbound traffic (such as package managers)
+                }
+            ]
+        },
+    },
+)
+
+print(&#34;\n--- Agent Response ---&#34;)
+print(interaction.output_text)
+</code></pre>
+<p>Positive : Header transforms support standard header schemas. For Google Cloud Storage buckets, use a standard OAuth token: <code>"Authorization": "Bearer GCLOUD_OAUTH_TOKEN"</code>.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Creating and Managing Reusable Agents" duration="1">
+        <p>Once you&#39;ve tuned your custom instructions, environments, and network configurations, you can save them as a registered Managed Agent. Registering the configuration allows you to invoke the agent using a custom ID, bypassing the need to pass instructions and configurations inline with every call.</p>
+<h2 is-upgraded>Step 1: Register a new Managed Agent</h2>
+<p>Create <code>06_manage_agents.py</code> to create, list, inspect, and delete agents:</p>
+<pre><code language="language-python" class="language-python">from google import genai
+
+client = genai.Client()
+
+agent_id = &#34;my-custom-data-analyst&#34;
+
+print(f&#34;1. Creating managed agent: {agent_id}...&#34;)
+
+# Create the saved agent definition
+agent = client.agents.create(
+    id=agent_id,
+    base_agent=&#34;antigravity-preview-05-2026&#34;,
+    system_instruction=&#34;You are a senior data analyst. Format all outputs as markdown tables.&#34;,
+    base_environment={
+        &#34;type&#34;: &#34;remote&#34;,
+        &#34;sources&#34;: [
+            {
+                &#34;type&#34;: &#34;inline&#34;,
+                &#34;target&#34;: &#34;.agents/AGENTS.md&#34;,
+                &#34;content&#34;: &#34;Always focus on precision and performance metrics.&#34;
+            }
+        ]
+    }
+)
+print(f&#34;Agent successfully registered. ID: {agent.id}&#34;)
+
+# Step 2: List registered agents
+print(&#34;\n2. Listing your managed agents:&#34;)
+agents = client.agents.list()
+for a in agents.agents:
+    print(f&#34; - {a.id}: {a.description or &#39;No description&#39;}&#34;)
+
+# Step 3: Fetch the agent definition
+print(f&#34;\n3. Fetching details for agent {agent_id}...&#34;)
+fetched_agent = client.agents.get(id=agent_id)
+print(f&#34;Fetched System Instruction: &#39;{fetched_agent.system_instruction}&#39;&#34;)
+
+# Step 4: Invoke the managed agent
+print(f&#34;\n4. Invoking managed agent &#39;{agent_id}&#39;...&#34;)
+result = client.interactions.create(
+    agent=agent_id,
+    input=&#34;Analyze our Q1 server load: 2000 requests/sec peak, 0.05% error rate, 45ms median response latency.&#34;,
+)
+print(&#34;\n--- Agent Response ---&#34;)
+print(result.output_text)
+
+# Step 5: Clean up the agent definition
+print(f&#34;\n5. Deleting managed agent &#39;{agent_id}&#39;...&#34;)
+client.agents.delete(id=agent_id)
+print(&#34;Agent deleted successfully.&#34;)
+</code></pre>
+<p>Run the lifecycle script:</p>
+<pre><code language="language-bash" class="language-bash">python 06_manage_agents.py
+</code></pre>
+<h2 is-upgraded>Expected Output</h2>
+<p>You should see the agent successfully created, listed, fetched, invoked, and cleaned up:</p>
+<pre>1. Creating managed agent: my-custom-data-analyst...
+Agent successfully registered. ID: my-custom-data-analyst
+
+2. Listing your managed agents:
+ - my-custom-data-analyst: No description
+
+3. Fetching details for agent my-custom-data-analyst...
+Fetched System Instruction: &#39;You are a senior data analyst. Format all outputs as markdown tables.&#39;
+
+4. Invoking managed agent &#39;my-custom-data-analyst&#39;...
+
+--- Agent Response ---
+| Metric | Value | Status |
+|---|---|---|
+| Peak Server Load | 2000 requests/sec | High |
+| Error Rate | 0.05% | Healthy |
+| Median Latency | 45ms | Optimal |
+
+5. Deleting managed agent &#39;my-custom-data-analyst&#39;...
+Agent deleted successfully.
+</pre>
+<p>Positive : When you delete an agent configuration, only the registered definition is removed. Any active execution environments or running instances created by the agent will not be deleted.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Wrap up" duration="1">
+        <p>Congratulations! You have completed the Managed Agents codelab.</p>
+<p>You have built and configured custom remote environments, managed persistent states across interaction boundaries, secured outbound traffic using network allowlists, injected API credentials safely, and managed registered custom agents throughout their lifecycles.</p>
+<h2 is-upgraded>What you covered</h2>
+<ul>
+<li><strong>Inline Configuration:</strong> Customizing agent properties dynamically at execution time.</li>
+<li><strong>Persistent Environments:</strong> Reusing remote execution sandboxes to maintain states, files, and installed libraries.</li>
+<li><strong>Declarative Workspace Mounting:</strong> Declaring files inline, cloning repository sources, and downloading files from Cloud Storage buckets.</li>
+<li><strong>Egress Network Security:</strong> Controlling outbound network traffic via allowlists and securely injecting credentials without exposure.</li>
+<li><strong>Agent Lifecycle Management:</strong> Creating, listing, retrieving, and deleting saved managed agents.</li>
+</ul>
+<h2 is-upgraded>Where to go next</h2>
+<p>For deeper insights, check out the following references:</p>
+<ul>
+<li><a href="https://ai.google.dev/gemini-api/docs/custom-agents" target="_blank">Managed Agents documentation</a></li>
+<li><a href="https://ai.google.dev/gemini-api/docs/agent-environment" target="_blank">Environments in Managed Agents</a></li>
+<li><a href="https://github.com/google-gemini/cookbook" target="_blank">Gemini API Python SDK reference</a></li>
+<li><a href="https://ai.google.dev/gemini-api/docs/antigravity-agent" target="_blank">Antigravity Agent tools reference</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

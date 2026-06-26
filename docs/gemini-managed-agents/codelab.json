@@ -1,0 +1,26 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2026-06-26T12:14:34+02:00",
+  "id": "gemini-managed-agents",
+  "duration": 8,
+  "title": "Building Custom Managed Agents with the Gemini API",
+  "summary": "Learn how to build custom managed agents, customize persistent environments, and secure outbound connections on the Gemini API.",
+  "source": "codelab.md",
+  "theme": "",
+  "status": [
+    "draft"
+  ],
+  "category": [
+    "gemini",
+    "ai",
+    "agents"
+  ],
+  "tags": [
+    "web"
+  ],
+  "feedback": "https://github.com/gerfalcon/gemini-managed-agents/issues",
+  "url": "gemini-managed-agents"
+}
