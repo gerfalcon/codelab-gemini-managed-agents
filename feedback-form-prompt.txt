@@ -1,0 +1,27 @@
+Create a feedback form for the codelab titled "Building Custom Managed Agents with the Gemini API".
+
+Include these sections and questions:
+
+Section 1: Participant Information (Optional)
+- Your Name (Paragraph text, not required)
+- Your Email (Paragraph text, not required)
+
+Create a separate section for each of the following codelab steps:
+1. Overview and Prerequisites
+2. Inline Customization
+3. Declarative Environment Sources
+4. Reusing Persistent Environments
+5. Security & Network Allowlists
+6. Secure Credential Injection
+7. Creating and Managing Reusable Agents
+8. Wrap up
+
+For each step section, ask:
+- "How clear were the instructions in this step?" (Scale 1 to 5, where 1 is "Very unclear" and 5 is "Very clear")
+- "Did you face any issues or errors in this step?" (Multiple choice: "Yes", "No")
+- "Comments or feedback" (Paragraph text, not required)
+
+Section 11: Overall Feedback
+- "Overall, how would you rate this codelab?" (Scale 1 to 5, where 1 is "Poor" and 5 is "Excellent")
+- "What did you like most about this codelab?" (Paragraph text, not required)
+- "What could be improved?" (Paragraph text, not required)
