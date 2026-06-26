@@ -28,7 +28,7 @@
                   environment="web"
                   feedback-link="https://github.com/gerfalcon/gemini-managed-agents/issues">
     
-      <google-codelab-step label="Overview and Prerequisites" duration="1">
+      <google-codelab-step label="Overview and Prerequisites" duration="5">
         <p>Managed agents on the Gemini API let you extend the Antigravity agent with your own instructions, skills, and data. You can customize the agent inline at interaction time, or save the configuration as a managed agent you invoke by ID.</p>
 <p>In this codelab, you will build and manage custom agents using persistent remote environments. You will learn to load files declaratively, persist installed packages, lock down outbound network calls, inject authentication headers securely, and manage the lifecycle of registered agents.</p>
 <h2 class="checklist" is-upgraded>What you&#39;ll learn</h2>
@@ -52,7 +52,7 @@
 
       </google-codelab-step>
     
-      <google-codelab-step label="Inline Customization" duration="1">
+      <google-codelab-step label="Inline Customization" duration="7">
         <p>The fastest way to build a custom agent is to pass your configuration inline while creating a new interaction with the Gemini API. You don&#39;t need any registration step first.</p>
 <p>You can customize the agent inline by overriding:</p>
 <ol type="1">
@@ -96,7 +96,7 @@ I am a data analyst. Whenever I generate reports, I will ensure they contain cle
 
       </google-codelab-step>
     
-      <google-codelab-step label="Declarative Environment Sources" duration="1">
+      <google-codelab-step label="Declarative Environment Sources" duration="8">
         <p>While you can pass configuration inline, we recommend organizing your agent&#39;s files in a structured workspace directory. You can mount three types of declarative sources into your environment:</p>
 <ul>
 <li><strong>Git Repository (</strong><strong><code>repository</code></strong><strong>)</strong>: Clones a Git repo into the sandbox</li>
@@ -153,7 +153,7 @@ print(interaction.output_text)
 
       </google-codelab-step>
     
-      <google-codelab-step label="Reusing Persistent Environments" duration="1">
+      <google-codelab-step label="Reusing Persistent Environments" duration="8">
         <p>Environments are decoupled from the interaction context. When you create an interaction with <code>"environment": "remote"</code>, the Gemini API provisions a Linux sandbox and returns an <code>environment_id</code>.</p>
 <p>You can capture this ID and reuse the environment across subsequent calls. Any changes, file creations, or installed packages will persist.</p>
 <h2 is-upgraded>Write the multi-turn persistent script</h2>
@@ -209,7 +209,7 @@ Workspace files:
 
       </google-codelab-step>
     
-      <google-codelab-step label="Security &amp; Network Allowlists" duration="1">
+      <google-codelab-step label="Security &amp; Network Allowlists" duration="8">
         <p>By default, sandboxes have unrestricted outbound internet access. For production workloads, you should restrict outbound network traffic to trusted APIs and endpoints.</p>
 <p>You can configure a network <code>allowlist</code> containing matching rules:</p>
 <ul>
@@ -253,7 +253,7 @@ print(interaction.output_text)
 
       </google-codelab-step>
     
-      <google-codelab-step label="Secure Credential Injection" duration="1">
+      <google-codelab-step label="Secure Credential Injection" duration="8">
         <p>When custom agents need to access private resources (such as private Git repositories or access-controlled databases), they require credentials.</p>
 <p>However, writing keys to files or setting environment variables inside the sandbox exposes them to potential leakage. Gemini API resolves this by using <strong>egress header transforms</strong> in the egress proxy. The proxy injects credentials on-the-fly, so the raw keys are never visible inside the sandbox itself.</p>
 <h2 is-upgraded>Base64 Encoding Credentials</h2>
@@ -307,7 +307,7 @@ print(interaction.output_text)
 
       </google-codelab-step>
     
-      <google-codelab-step label="Creating and Managing Reusable Agents" duration="1">
+      <google-codelab-step label="Creating and Managing Reusable Agents" duration="12">
         <p>Once you&#39;ve tuned your custom instructions, environments, and network configurations, you can save them as a registered Managed Agent. Registering the configuration allows you to invoke the agent using a custom ID, bypassing the need to pass instructions and configurations inline with every call.</p>
 <h2 is-upgraded>Step 1: Register a new Managed Agent</h2>
 <p>Create <code>06_manage_agents.py</code> to create, list, inspect, and delete agents:</p>
@@ -393,7 +393,7 @@ Agent deleted successfully.
 
       </google-codelab-step>
     
-      <google-codelab-step label="Wrap up" duration="1">
+      <google-codelab-step label="Wrap up" duration="4">
         <p>Congratulations! You have completed the Managed Agents codelab.</p>
 <p>You have built and configured custom remote environments, managed persistent states across interaction boundaries, secured outbound traffic using network allowlists, injected API credentials safely, and managed registered custom agents throughout their lifecycles.</p>
 <h2 is-upgraded>What you covered</h2>

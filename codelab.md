@@ -9,7 +9,7 @@ feedback link: https://github.com/gerfalcon/gemini-managed-agents/issues
 # Building Custom Managed Agents with the Gemini API
 
 ## Overview and Prerequisites
-Duration: 0:05
+Duration: 5:00
 
 Managed agents on the Gemini API let you extend the Antigravity agent with your own instructions, skills, and data. You can customize the agent inline at interaction time, or save the configuration as a managed agent you invoke by ID.
 
@@ -34,7 +34,7 @@ In this codelab, you will build and manage custom agents using persistent remote
 Let's get started by setting up the Python environment.
 
 ## Inline Customization
-Duration: 0:07
+Duration: 7:00
 
 The fastest way to build a custom agent is to pass your configuration inline while creating a new interaction with the Gemini API. You don't need any registration step first.
 
@@ -90,7 +90,7 @@ Positive
 : Inline configurations are ideal for fast prototyping and one-off tasks where you don't need to persist or reuse the agent settings.
 
 ## Declarative Environment Sources
-Duration: 0:08
+Duration: 8:00
 
 While you can pass configuration inline, we recommend organizing your agent's files in a structured workspace directory. You can mount three types of declarative sources into your environment:
 - **Git Repository (`repository`)**: Clones a Git repo into the sandbox
@@ -155,7 +155,7 @@ Negative
 : When specifying target paths, you cannot mount files to the environment root `/`. You must always specify a sub-directory target (e.g., `/workspace/...` or `/backend-app`).
 
 ## Reusing Persistent Environments
-Duration: 0:07
+Duration: 8:00
 
 Environments are decoupled from the interaction context. When you create an interaction with `"environment": "remote"`, the Gemini API provisions a Linux sandbox and returns an `environment_id`. 
 
@@ -224,7 +224,7 @@ Positive
 : Persisting environments avoids rebuilding work environments and enables developers to run interactive multi-turn workflows where intermediate state matters.
 
 ## Security & Network Allowlists
-Duration: 0:08
+Duration: 8:00
 
 By default, sandboxes have unrestricted outbound internet access. For production workloads, you should restrict outbound network traffic to trusted APIs and endpoints.
 
@@ -276,7 +276,7 @@ Negative
 : A subdomain wildcard like `*.example.com` matches subdomains but does **not** match the root domain `example.com`. If you need to access both, you must specify them as separate entries in your allowlist.
 
 ## Secure Credential Injection
-Duration: 0:08
+Duration: 8:00
 
 When custom agents need to access private resources (such as private Git repositories or access-controlled databases), they require credentials.
 
@@ -342,7 +342,7 @@ Positive
 : Header transforms support standard header schemas. For Google Cloud Storage buckets, use a standard OAuth token: `"Authorization": "Bearer GCLOUD_OAUTH_TOKEN"`.
 
 ## Creating and Managing Reusable Agents
-Duration: 0:10
+Duration: 12:00
 
 Once you've tuned your custom instructions, environments, and network configurations, you can save them as a registered Managed Agent. Registering the configuration allows you to invoke the agent using a custom ID, bypassing the need to pass instructions and configurations inline with every call.
 
@@ -440,7 +440,7 @@ Positive
 : When you delete an agent configuration, only the registered definition is removed. Any active execution environments or running instances created by the agent will not be deleted.
 
 ## Wrap up
-Duration: 0:02
+Duration: 4:00
 
 Congratulations! You have completed the Managed Agents codelab.
 
