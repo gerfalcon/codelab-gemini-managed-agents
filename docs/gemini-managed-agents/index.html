@@ -91,7 +91,8 @@ python 01_inline_customization.py
 --- Agent Response ---
 I am a data analyst. Whenever I generate reports, I will ensure they contain clear visualizations and are exported in PDF format.
 </pre>
-<p>Positive : Inline configurations are ideal for fast prototyping and one-off tasks where you don&#39;t need to persist or reuse the agent settings.</p>
+<aside class="special"><p> Inline configurations are ideal for fast prototyping and one-off tasks where you don&#39;t need to persist or reuse the agent settings. </p>
+</aside>
 
 
       </google-codelab-step>
@@ -148,7 +149,8 @@ print(interaction.output_text)
 <pre><code language="language-bash" class="language-bash">python 02_environment_sources.py
 </code></pre>
 <p>The agent clones the repository, downloads the GCS data, mounts the inline README, and presents a summary of the files in your workspace.</p>
-<p>Negative : When specifying target paths, you cannot mount files to the environment root <code>/</code>. You must always specify a sub-directory target (e.g., <code>/workspace/...</code> or <code>/backend-app</code>).</p>
+<aside class="warning"><p> When specifying target paths, you cannot mount files to the environment root `/`. You must always specify a sub-directory target (e.g., `/workspace/...` or `/backend-app`). </p>
+</aside>
 
 
       </google-codelab-step>
@@ -204,7 +206,8 @@ Plot created and saved to /workspace/plot.png.
 Workspace files:
 - /workspace/plot.png
 </pre>
-<p>Positive : Persisting environments avoids rebuilding work environments and enables developers to run interactive multi-turn workflows where intermediate state matters.</p>
+<aside class="special"><p> Persisting environments avoids rebuilding work environments and enables developers to run interactive multi-turn workflows where intermediate state matters. </p>
+</aside>
 
 
       </google-codelab-step>
@@ -248,7 +251,8 @@ print(interaction.output_text)
 <pre><code language="language-bash" class="language-bash">python 04_network_security.py
 </code></pre>
 <p>You should see the agent report that connection to <code>pypi.org</code> succeeds, while the outbound attempt to <code>google.com</code> is blocked and fails.</p>
-<p>Negative : A subdomain wildcard like <code>*.example.com</code> matches subdomains but does <strong>not</strong> match the root domain <code>example.com</code>. If you need to access both, you must specify them as separate entries in your allowlist.</p>
+<aside class="warning"><p> A subdomain wildcard like `*.example.com` matches subdomains but does **not** match the root domain `example.com`. If you need to access both, you must specify them as separate entries in your allowlist. </p>
+</aside>
 
 
       </google-codelab-step>
@@ -302,7 +306,8 @@ interaction = client.interactions.create(
 print(&#34;\n--- Agent Response ---&#34;)
 print(interaction.output_text)
 </code></pre>
-<p>Positive : Header transforms support standard header schemas. For Google Cloud Storage buckets, use a standard OAuth token: <code>"Authorization": "Bearer GCLOUD_OAUTH_TOKEN"</code>.</p>
+<aside class="special"><p> Header transforms support standard header schemas. For Google Cloud Storage buckets, use a standard OAuth token: `&#34;Authorization&#34;: &#34;Bearer GCLOUD_OAUTH_TOKEN&#34;`. </p>
+</aside>
 
 
       </google-codelab-step>
@@ -388,7 +393,8 @@ Fetched System Instruction: &#39;You are a senior data analyst. Format all outpu
 5. Deleting managed agent &#39;my-custom-data-analyst&#39;...
 Agent deleted successfully.
 </pre>
-<p>Positive : When you delete an agent configuration, only the registered definition is removed. Any active execution environments or running instances created by the agent will not be deleted.</p>
+<aside class="special"><p> When you delete an agent configuration, only the registered definition is removed. Any active execution environments or running instances created by the agent will not be deleted. </p>
+</aside>
 
 
       </google-codelab-step>

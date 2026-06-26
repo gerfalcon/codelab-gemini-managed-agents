@@ -86,8 +86,9 @@ Sending interaction with inline customization...
 I am a data analyst. Whenever I generate reports, I will ensure they contain clear visualizations and are exported in PDF format.
 ```
 
-Positive
-: Inline configurations are ideal for fast prototyping and one-off tasks where you don't need to persist or reuse the agent settings.
+<aside class="positive">
+Inline configurations are ideal for fast prototyping and one-off tasks where you don't need to persist or reuse the agent settings.
+</aside>
 
 ## Declarative Environment Sources
 Duration: 8:00
@@ -151,8 +152,9 @@ python 02_environment_sources.py
 
 The agent clones the repository, downloads the GCS data, mounts the inline README, and presents a summary of the files in your workspace.
 
-Negative
-: When specifying target paths, you cannot mount files to the environment root `/`. You must always specify a sub-directory target (e.g., `/workspace/...` or `/backend-app`).
+<aside class="negative">
+When specifying target paths, you cannot mount files to the environment root `/`. You must always specify a sub-directory target (e.g., `/workspace/...` or `/backend-app`).
+</aside>
 
 ## Reusing Persistent Environments
 Duration: 8:00
@@ -220,8 +222,9 @@ Workspace files:
 - /workspace/plot.png
 ```
 
-Positive
-: Persisting environments avoids rebuilding work environments and enables developers to run interactive multi-turn workflows where intermediate state matters.
+<aside class="positive">
+Persisting environments avoids rebuilding work environments and enables developers to run interactive multi-turn workflows where intermediate state matters.
+</aside>
 
 ## Security & Network Allowlists
 Duration: 8:00
@@ -272,8 +275,9 @@ python 04_network_security.py
 
 You should see the agent report that connection to `pypi.org` succeeds, while the outbound attempt to `google.com` is blocked and fails.
 
-Negative
-: A subdomain wildcard like `*.example.com` matches subdomains but does **not** match the root domain `example.com`. If you need to access both, you must specify them as separate entries in your allowlist.
+<aside class="negative">
+A subdomain wildcard like `*.example.com` matches subdomains but does **not** match the root domain `example.com`. If you need to access both, you must specify them as separate entries in your allowlist.
+</aside>
 
 ## Secure Credential Injection
 Duration: 8:00
@@ -338,8 +342,9 @@ print("\n--- Agent Response ---")
 print(interaction.output_text)
 ```
 
-Positive
-: Header transforms support standard header schemas. For Google Cloud Storage buckets, use a standard OAuth token: `"Authorization": "Bearer GCLOUD_OAUTH_TOKEN"`.
+<aside class="positive">
+Header transforms support standard header schemas. For Google Cloud Storage buckets, use a standard OAuth token: `"Authorization": "Bearer GCLOUD_OAUTH_TOKEN"`.
+</aside>
 
 ## Creating and Managing Reusable Agents
 Duration: 12:00
@@ -436,8 +441,9 @@ Fetched System Instruction: 'You are a senior data analyst. Format all outputs a
 Agent deleted successfully.
 ```
 
-Positive
-: When you delete an agent configuration, only the registered definition is removed. Any active execution environments or running instances created by the agent will not be deleted.
+<aside class="positive">
+When you delete an agent configuration, only the registered definition is removed. Any active execution environments or running instances created by the agent will not be deleted.
+</aside>
 
 ## Wrap up
 Duration: 4:00
